@@ -1,0 +1,10 @@
+.gallery__container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 320px));
+  gap: 1rem;
+}
+.gallery__card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
