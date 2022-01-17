@@ -24,7 +24,7 @@ function onSearch(e) {
   e.preventDefault();
   page = 1;
   clearGalleryMarkup();
-  query = e.target.searchQuery.value;
+  query = e.target.searchQuery.value.trim();
   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
   axios.get(url).then(onSuccess).catch(onError);
   gallery = new SimpleLightbox('.gallery__container a');
@@ -47,10 +47,11 @@ function onSuccess(response) {
 function onError() {
   Notify.failure('Sorry, there is no response from server. Please try again.');
 }
-function onMoreBtnClick() {
+async function onMoreBtnClick() {
   hideButton();
   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
-  axios.get(url).then(onSuccess).catch(onError);
+  await axios.get(url).then(onSuccess).catch(onError);
+  scrollPage();
 }
 function hideButton() {
   refs.moreBtn.classList.add('is-hidden');
@@ -60,4 +61,14 @@ function showButton() {
 }
 function clearGalleryMarkup() {
   refs.gallery.innerHTML = '';
+}
+function scrollPage() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery__container')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
 }
