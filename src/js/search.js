@@ -3,31 +3,33 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import cardMarkup from './templates/card.hbs';
 const axios = require('axios');
-
+const gallery = new SimpleLightbox('.gallery__card');
 const refs = {
   form: document.querySelector('#search-form'),
   gallery: document.querySelector('.gallery__container'),
   moreBtn: document.querySelector('.load-more'),
 };
-
 const API_KEY = '25272385-d3b781fb1902e693cd197cf56';
 const BASE_URL = 'https://pixabay.com/api/';
 const DEFAULT_QUERY = '&per_page=40&image_type=photo&orientation=horizontal&safesearch=true';
 let query = '';
 let page = 1;
-let gallery;
 
 refs.form.addEventListener('submit', onSearch);
 refs.moreBtn.addEventListener('click', onMoreBtnClick);
 
-function onSearch(e) {
+async function onSearch(e) {
   e.preventDefault();
   page = 1;
   clearGalleryMarkup();
   query = e.target.searchQuery.value.trim();
   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
-  axios.get(url).then(onSuccess).catch(onError);
-  gallery = new SimpleLightbox('.gallery__container a');
+  try {
+    const response = await axios.get(url);
+    onSuccess(response);
+  } catch {
+    onError();
+  }
 }
 function onSuccess(response) {
   const cards = response.data.hits;
@@ -50,7 +52,12 @@ function onError() {
 async function onMoreBtnClick() {
   hideButton();
   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
-  await axios.get(url).then(onSuccess).catch(onError);
+  try {
+    const response = await axios.get(url);
+    onSuccess(response);
+  } catch {
+    onError();
+  }
   scrollPage();
 }
 function hideButton() {
