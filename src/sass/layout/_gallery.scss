@@ -7,4 +7,23 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border: 1px solid #ccc;
+}
+.info {
+  padding: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+  font-size: 0.5rem;
+}
+.load-more {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  transition: opacity 250ms linear, visibility 250ms linear;
+  &.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
