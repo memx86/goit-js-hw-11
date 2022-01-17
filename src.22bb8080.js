@@ -80,4 +80,4 @@ module.exports=require("./lib/axios");
 },{"notiflix/build/notiflix-notify-aio":"MeeU","simplelightbox":"yx6k","simplelightbox/dist/simple-lightbox.min.css":"kz9M","./templates/card.hbs":"smAC","axios":"dZBD"}],"Focm":[function(require,module,exports) {
 "use strict";require("./js/search"),require("./sass/main.scss");
 },{"./js/search":"HU2o","./sass/main.scss":"kz9M"}]},{},["Focm"], null)
-//# sourceMappingURL=/goit-js-hw-11/src.5466a531.js.map
+//# sourceMappingURL=/goit-js-hw-11/src.22bb8080.js.map
