@@ -21,14 +21,15 @@
   font-size: 0.5rem;
 }
 .load-more {
-  display: flex;
+  @extend %btn;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 1rem;
   opacity: 1;
   visibility: visible;
   pointer-events: all;
-  transition: opacity 250ms linear, visibility 250ms linear;
+  transition: opacity 250ms linear, visibility 250ms linear, color 250ms linear,
+    background-color 250ms linear, border-color 250ms linear;
   &.is-hidden {
     opacity: 0;
     visibility: hidden;

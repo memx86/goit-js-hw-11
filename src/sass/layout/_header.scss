@@ -13,4 +13,25 @@
 .search-form__input {
   width: 100%;
   padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #fff;
+  background-color: transparent;
+  color: #fff;
+  &:focus {
+    outline: 1px solid #fff;
+  }
+  &::placeholder {
+    color: rgba($color: #fff, $alpha: 0.5);
+  }
+}
+.search-form__btn {
+  @extend %btn;
+  background-color: #fff;
+  color: #0080ff;
+  &:hover,
+  &:focus {
+    background-color: transparent;
+    color: #fff;
+    border-color: #fff;
+  }
 }
