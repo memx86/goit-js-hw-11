@@ -27,8 +27,8 @@ async function onSearch(e) {
   try {
     const response = await axios.get(url);
     onSuccess(response);
-  } catch {
-    onError();
+  } catch (error) {
+    onError(error);
   }
 }
 function onSuccess(response) {
@@ -46,7 +46,11 @@ function onSuccess(response) {
   gallery.refresh();
   showButton();
 }
-function onError() {
+function onError(error) {
+  if (error.response.status === 400) {
+    Notify.failure("We're sorry, but you've reached the end of search results.");
+    return;
+  }
   Notify.failure('Sorry, there is no response from server. Please try again.');
 }
 async function onMoreBtnClick() {
@@ -55,8 +59,8 @@ async function onMoreBtnClick() {
   try {
     const response = await axios.get(url);
     onSuccess(response);
-  } catch {
-    onError();
+  } catch (error) {
+    onError(error);
   }
   scrollPage();
 }
