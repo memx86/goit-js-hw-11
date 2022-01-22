@@ -3,6 +3,7 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import cardMarkup from './templates/card.hbs';
 const axios = require('axios');
+const throttle = require('lodash.throttle');
 const gallery = new SimpleLightbox('.gallery__card');
 const refs = {
   form: document.querySelector('#search-form'),
@@ -14,6 +15,7 @@ const BASE_URL = 'https://pixabay.com/api/';
 const DEFAULT_QUERY = '&per_page=40&image_type=photo&orientation=horizontal&safesearch=true';
 let query = '';
 let page = 1;
+const onScrollThrottled = throttle(onScroll, 250);
 
 refs.form.addEventListener('submit', onSearch);
 // refs.moreBtn.addEventListener('click', onMoreBtnClick);
@@ -30,7 +32,7 @@ async function onSearch(e) {
   } catch (error) {
     onError(error);
   }
-  window.addEventListener('scroll', onScroll);
+  window.addEventListener('scroll', onScrollThrottled);
 }
 function onSuccess(response) {
   const cards = response.data.hits;
@@ -59,8 +61,12 @@ function clearGalleryMarkup() {
 }
 async function onScroll() {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+  const { height: cardHeight } = document
+    .querySelector('.gallery__container')
+    .firstElementChild.getBoundingClientRect();
 
-  if (scrollTop + clientHeight < scrollHeight - 5) {
+  // scroll starts to execute on 1 card height and less from bottom of document
+  if (scrollTop + clientHeight < scrollHeight - cardHeight) {
     return;
   }
 
