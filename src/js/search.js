@@ -2,8 +2,8 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import cardMarkup from './templates/card.hbs';
-const axios = require('axios');
-const throttle = require('lodash.throttle');
+import axios from 'axios';
+import throttle from 'lodash.throttle';
 const gallery = new SimpleLightbox('.gallery__card');
 const refs = {
   form: document.querySelector('#search-form'),
@@ -15,6 +15,7 @@ const BASE_URL = 'https://pixabay.com/api/';
 const DEFAULT_QUERY = '&per_page=40&image_type=photo&orientation=horizontal&safesearch=true';
 let query = '';
 let page = 1;
+let isScrollListener = false;
 const onScrollThrottled = throttle(onScroll, 250);
 
 refs.form.addEventListener('submit', onSearch);
@@ -32,7 +33,10 @@ async function onSearch(e) {
   } catch (error) {
     onError(error);
   }
-  window.addEventListener('scroll', onScrollThrottled);
+  if (!isScrollListener) {
+    window.addEventListener('scroll', onScrollThrottled);
+    isScrollListener = true;
+  }
 }
 function onSuccess(response) {
   const cards = response.data.hits;
@@ -52,6 +56,7 @@ function onSuccess(response) {
 function onError(error) {
   if (error.response.status === 400) {
     Notify.failure("We're sorry, but you've reached the end of search results.");
+    // window.removeEventListener('scroll', onScrollThrottled);
     return;
   }
   Notify.failure('Sorry, there is no response from server. Please try again.');
@@ -61,15 +66,13 @@ function clearGalleryMarkup() {
 }
 async function onScroll() {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  const { height: cardHeight } = document
-    .querySelector('.gallery__container')
-    .firstElementChild.getBoundingClientRect();
+  const { height: cardHeight } = refs.gallery.firstElementChild.getBoundingClientRect();
 
   // scroll starts to execute on 1 card height and less from bottom of document
   if (scrollTop + clientHeight < scrollHeight - cardHeight) {
     return;
   }
-
+  console.log(scrollTop);
   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
   try {
     const response = await axios.get(url);
@@ -78,19 +81,21 @@ async function onScroll() {
     onError(error);
   }
 }
-async function onMoreBtnClick() {
-  hideButton();
-  const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
-  try {
-    const response = await axios.get(url);
-    onSuccess(response);
-  } catch (error) {
-    onError(error);
-  }
-  scrollPage();
-}
 
+// async function onMoreBtnClick() {
+//   hideButton();
+//   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
+//   try {
+//     const response = await axios.get(url);
+//     onSuccess(response);
+//   } catch (error) {
+//     onError(error);
+//   }
+//   scrollPage();
+// }
+//
 // Load more button
+//
 // function hideButton() {
 //   refs.moreBtn.classList.add('is-hidden');
 // }
@@ -98,10 +103,8 @@ async function onMoreBtnClick() {
 //   refs.moreBtn.classList.remove('is-hidden');
 // }
 // function scrollPage() {
-//   const { height: cardHeight } = document
-//     .querySelector('.gallery__container')
-//     .firstElementChild.getBoundingClientRect();
-
+//   const { height: cardHeight } = refs.gallery.firstElementChild.getBoundingClientRect();
+//
 //   window.scrollBy({
 //     top: cardHeight * 2,
 //     behavior: 'smooth',
