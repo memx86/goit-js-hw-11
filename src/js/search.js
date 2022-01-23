@@ -1,7 +1,7 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import cardMarkup from './templates/card.hbs';
+import createCardMarkup from './templates/card.hbs';
 import axios from 'axios';
 import throttle from 'lodash.throttle';
 const gallery = new SimpleLightbox('.gallery__card');
@@ -10,22 +10,30 @@ const refs = {
   gallery: document.querySelector('.gallery__container'),
   moreBtn: document.querySelector('.load-more'),
 };
-const API_KEY = '25272385-d3b781fb1902e693cd197cf56';
-const BASE_URL = 'https://pixabay.com/api/';
-const DEFAULT_QUERY = '&per_page=40&image_type=photo&orientation=horizontal&safesearch=true';
 let query = '';
 let page = 1;
-let isScrollListener = false;
+// let isScrollListener = false;
 const onScrollThrottled = throttle(onScroll, 250);
 
 refs.form.addEventListener('submit', onSearch);
+window.addEventListener('scroll', onScrollThrottled);
 // refs.moreBtn.addEventListener('click', onMoreBtnClick);
 
 async function onSearch(e) {
   e.preventDefault();
   page = 1;
-  clearGalleryMarkup();
+  clearGallery();
   query = e.target.searchQuery.value.trim();
+  await loadMore(query);
+  // if (!isScrollListener) {
+  //   window.addEventListener('scroll', onScrollThrottled);
+  //   isScrollListener = true;
+  // }
+}
+async function loadMore(query) {
+  const API_KEY = '25272385-d3b781fb1902e693cd197cf56';
+  const BASE_URL = 'https://pixabay.com/api/';
+  const DEFAULT_QUERY = '&per_page=40&image_type=photo&orientation=horizontal&safesearch=true';
   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
   try {
     const response = await axios.get(url);
@@ -33,22 +41,24 @@ async function onSearch(e) {
   } catch (error) {
     onError(error);
   }
-  if (!isScrollListener) {
-    window.addEventListener('scroll', onScrollThrottled);
-    isScrollListener = true;
-  }
 }
 function onSuccess(response) {
   const cards = response.data.hits;
-  if (cards.length === 0) {
+  const totalHits = response.data.totalHits;
+  if (cards.length === 0 && totalHits === 0) {
     Notify.failure('Sorry, there are no images matching your search query. Please try again.');
     return;
   }
-  const totalHits = response.data.totalHits;
-  const cardsMarkup = cards.map(cardMarkup).join('');
+  if (cards.length === 0 && totalHits !== 0) {
+    Notify.failure("We're sorry, but you've reached the end of search results.");
+    return;
+  }
+  if (page === 1) {
+    Notify.success(`Hooray! We found ${totalHits} images.`);
+  }
+  const cardsMarkup = createCardsMarkup(cards);
 
-  if (page === 1) Notify.success(`Hooray! We found ${totalHits} images.`);
-  refs.gallery.insertAdjacentHTML('beforeend', cardsMarkup);
+  addCardsToGallery(cardsMarkup);
   page += 1;
   gallery.refresh();
   // showButton();
@@ -61,7 +71,13 @@ function onError(error) {
   }
   Notify.failure('Sorry, there is no response from server. Please try again.');
 }
-function clearGalleryMarkup() {
+function createCardsMarkup(cards) {
+  return cards.map(createCardMarkup).join('');
+}
+function addCardsToGallery(markup) {
+  refs.gallery.insertAdjacentHTML('beforeend', markup);
+}
+function clearGallery() {
   refs.gallery.innerHTML = '';
 }
 async function onScroll() {
@@ -72,25 +88,12 @@ async function onScroll() {
   if (scrollTop + clientHeight < scrollHeight - cardHeight) {
     return;
   }
-  console.log(scrollTop);
-  const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
-  try {
-    const response = await axios.get(url);
-    onSuccess(response);
-  } catch (error) {
-    onError(error);
-  }
+  await loadMore(query);
 }
 
 // async function onMoreBtnClick() {
 //   hideButton();
-//   const url = `${BASE_URL}?key=${API_KEY}&q=${query}&page=${page}${DEFAULT_QUERY}`;
-//   try {
-//     const response = await axios.get(url);
-//     onSuccess(response);
-//   } catch (error) {
-//     onError(error);
-//   }
+//   loadMore(query);
 //   scrollPage();
 // }
 //
