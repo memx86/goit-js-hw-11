@@ -12,11 +12,10 @@ const refs = {
 };
 let query = '';
 let page = 1;
-// let isScrollListener = false;
+let isScrollListener = false;
 const onScrollThrottled = throttle(onScroll, 250);
 
 refs.form.addEventListener('submit', onSearch);
-window.addEventListener('scroll', onScrollThrottled);
 // refs.moreBtn.addEventListener('click', onMoreBtnClick);
 
 async function onSearch(e) {
@@ -25,10 +24,10 @@ async function onSearch(e) {
   clearGallery();
   query = e.target.searchQuery.value.trim();
   await loadMore(query);
-  // if (!isScrollListener) {
-  //   window.addEventListener('scroll', onScrollThrottled);
-  //   isScrollListener = true;
-  // }
+  if (!isScrollListener) {
+    window.addEventListener('scroll', onScrollThrottled);
+    isScrollListener = true;
+  }
 }
 async function loadMore(query) {
   const API_KEY = '25272385-d3b781fb1902e693cd197cf56';
@@ -47,10 +46,14 @@ function onSuccess(response) {
   const totalHits = response.data.totalHits;
   if (cards.length === 0 && totalHits === 0) {
     Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+    window.removeEventListener('scroll', onScrollThrottled);
+    isScrollListener = false;
     return;
   }
   if (cards.length === 0 && totalHits !== 0) {
     Notify.failure("We're sorry, but you've reached the end of search results.");
+    window.removeEventListener('scroll', onScrollThrottled);
+    isScrollListener = false;
     return;
   }
   if (page === 1) {
@@ -64,9 +67,10 @@ function onSuccess(response) {
   // showButton();
 }
 function onError(error) {
+  window.removeEventListener('scroll', onScrollThrottled);
+  isScrollListener = false;
   if (error.response.status === 400) {
     Notify.failure("We're sorry, but you've reached the end of search results.");
-    // window.removeEventListener('scroll', onScrollThrottled);
     return;
   }
   Notify.failure('Sorry, there is no response from server. Please try again.');
