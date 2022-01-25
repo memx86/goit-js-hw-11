@@ -9,7 +9,7 @@ export default class PixabayApiService {
     this.page = 1;
     this.searchQuery = '';
   }
-  getArticles() {
+  getImages() {
     const url = `${BASE_URL}?key=${API_KEY}&q=${this.searchQuery}&page=${this.page}${DEFAULT_QUERY}`;
     return axios.get(url).then(response => {
       this.incrementPage();

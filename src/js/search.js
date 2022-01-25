@@ -30,7 +30,7 @@ async function onSearch(e) {
 }
 async function loadMore() {
   try {
-    const response = await pixabayApiService.getArticles();
+    const response = await pixabayApiService.getImages();
     onSuccess(response);
   } catch (error) {
     onError(error);
