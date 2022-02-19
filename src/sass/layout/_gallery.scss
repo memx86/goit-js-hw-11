@@ -6,19 +6,39 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 320px));
   gap: 1rem;
+  justify-content: center;
 }
 .gallery__card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 250ms linear;
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+.gallery__img {
+  height: 210px;
+  object-fit: cover;
+}
+.sl-image {
+  border-radius: 10px;
+  overflow: hidden;
 }
 .info {
   padding: 0.25rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  justify-content: center;
   gap: 0.25rem;
-  font-size: 0.5rem;
+  font-size: 0.6rem;
+}
+.info__item {
+  display: flex;
+  flex-direction: column;
 }
 .load-more {
   @extend %btn;

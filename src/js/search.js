@@ -12,21 +12,26 @@ const refs = {
   moreBtn: document.querySelector('.load-more'),
 };
 const pixabayApiService = new PixabayApiService();
-const onScrollThrottled = throttle(onScroll, 250);
+const onScrollThrottled = throttle(onScroll, 350);
 let isScrollListener = false;
 
 refs.form.addEventListener('submit', onSearch);
 
 async function onSearch(e) {
   e.preventDefault();
+  e.target.searchQuery.placeholder = 'Search images...';
   pixabayApiService.resetPage();
   clearGallery();
-  pixabayApiService.query = e.target.searchQuery.value.trim();
+  const searchQuery = e.target.searchQuery.value.trim();
+  if (!searchQuery) return;
+  pixabayApiService.query = searchQuery;
   await loadMore();
   if (!isScrollListener) {
     window.addEventListener('scroll', onScrollThrottled);
     isScrollListener = true;
   }
+  e.target.reset();
+  e.target.searchQuery.placeholder = searchQuery;
 }
 async function loadMore() {
   try {
@@ -41,14 +46,12 @@ function onSuccess(response) {
   const totalHits = response.data.totalHits;
   if (cards.length === 0 && totalHits === 0) {
     Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-    window.removeEventListener('scroll', onScrollThrottled);
-    isScrollListener = false;
+    removeScrollListener();
     return;
   }
   if (cards.length === 0 && totalHits !== 0) {
     Notify.failure("We're sorry, but you've reached the end of search results.");
-    window.removeEventListener('scroll', onScrollThrottled);
-    isScrollListener = false;
+    removeScrollListener();
     return;
   }
   if (pixabayApiService.page === 2) {
@@ -60,8 +63,7 @@ function onSuccess(response) {
   gallery.refresh();
 }
 function onError(error) {
-  window.removeEventListener('scroll', onScrollThrottled);
-  isScrollListener = false;
+  removeScrollListener();
   if (error.response.status === 400) {
     Notify.failure("We're sorry, but you've reached the end of search results.");
     return;
@@ -86,4 +88,8 @@ async function onScroll() {
     return;
   }
   await loadMore();
+}
+function removeScrollListener() {
+  window.removeEventListener('scroll', onScrollThrottled);
+  isScrollListener = false;
 }
