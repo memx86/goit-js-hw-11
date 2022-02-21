@@ -14,11 +14,13 @@ const refs = {
 const pixabayApiService = new PixabayApiService();
 const onScrollThrottled = throttle(onScroll, 350);
 let isScrollListener = false;
-
+let searchTime = Date.now();
 refs.form.addEventListener('submit', onSearch);
 
 async function onSearch(e) {
   e.preventDefault();
+  if (Date.now() - searchTime < 1000) return;
+  searchTime = Date.now();
   e.target.searchQuery.placeholder = 'Search images...';
   pixabayApiService.resetPage();
   clearGallery();
@@ -49,7 +51,8 @@ function onSuccess(response) {
     removeScrollListener();
     return;
   }
-  if (cards.length === 0 && totalHits !== 0) {
+  if (totalHits <= (pixabayApiService.page - 1) * 40) {
+    if (!isScrollListener) return;
     Notify.failure("We're sorry, but you've reached the end of search results.");
     removeScrollListener();
     return;
@@ -62,12 +65,9 @@ function onSuccess(response) {
   addCardsToGallery(cardsMarkup);
   gallery.refresh();
 }
-function onError(error) {
+function onError() {
+  if (!isScrollListener) return;
   removeScrollListener();
-  if (error.response.status === 400) {
-    Notify.failure("We're sorry, but you've reached the end of search results.");
-    return;
-  }
   Notify.failure('Sorry, there is no response from server. Please try again.');
 }
 function createCardsMarkup(cards) {

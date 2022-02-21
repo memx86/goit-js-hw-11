@@ -3,15 +3,15 @@ import axios from 'axios';
 export default class PixabayApiService {
   static #API_KEY = '25272385-d3b781fb1902e693cd197cf56';
   static #BASE_URL = 'https://pixabay.com/api/';
+  #page = 1;
   constructor() {
     axios.defaults.baseURL = PixabayApiService.#BASE_URL;
-    this.page = 1;
     this.searchQuery = '';
   }
   getImages() {
     const params = new URLSearchParams({
       q: this.searchQuery,
-      page: this.page,
+      page: this.#page,
       per_page: 40,
       image_type: 'photo',
       orientation: 'horizontal',
@@ -25,10 +25,16 @@ export default class PixabayApiService {
     });
   }
   incrementPage() {
-    this.page += 1;
+    this.#page += 1;
   }
   resetPage() {
-    this.page = 1;
+    this.#page = 1;
+  }
+  get page() {
+    return this.#page;
+  }
+  set page(value) {
+    this.#page = value;
   }
   get query() {
     return this.searchQuery;
