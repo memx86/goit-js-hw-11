@@ -1,7 +1,6 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import throttle from 'lodash.throttle';
 import createCardMarkup from './templates/card.hbs';
 import PixabayApiService from './PixabayApiService';
 
@@ -12,14 +11,17 @@ const refs = {
   moreBtn: document.querySelector('.load-more'),
 };
 const pixabayApiService = new PixabayApiService();
-const onScrollThrottled = throttle(onScroll, 350);
-let isScrollListener = false;
+const observer = new IntersectionObserver(onObserve, { threshold: 0.7 });
+let isObserving = false;
 let searchTime = Date.now();
 refs.form.addEventListener('submit', onSearch);
 
 async function onSearch(e) {
   e.preventDefault();
   if (Date.now() - searchTime < 1000) return;
+  if (isObserving) {
+    observer.unobserve(refs.gallery.lastElementChild);
+  }
   searchTime = Date.now();
   e.target.searchQuery.placeholder = 'Search images...';
   pixabayApiService.resetPage();
@@ -28,10 +30,6 @@ async function onSearch(e) {
   if (!searchQuery) return;
   pixabayApiService.query = searchQuery;
   await loadMore();
-  if (!isScrollListener) {
-    window.addEventListener('scroll', onScrollThrottled);
-    isScrollListener = true;
-  }
   e.target.reset();
   e.target.searchQuery.placeholder = searchQuery;
 }
@@ -48,13 +46,10 @@ function onSuccess(response) {
   const totalHits = response.data.totalHits;
   if (cards.length === 0 && totalHits === 0) {
     Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-    removeScrollListener();
     return;
   }
   if (totalHits <= (pixabayApiService.page - 1) * 40) {
-    if (!isScrollListener) return;
     Notify.failure("We're sorry, but you've reached the end of search results.");
-    removeScrollListener();
     return;
   }
   if (pixabayApiService.page === 2) {
@@ -64,10 +59,10 @@ function onSuccess(response) {
 
   addCardsToGallery(cardsMarkup);
   gallery.refresh();
+  observer.observe(refs.gallery.lastElementChild);
+  isObserving = true;
 }
 function onError() {
-  if (!isScrollListener) return;
-  removeScrollListener();
   Notify.failure('Sorry, there is no response from server. Please try again.');
 }
 function createCardsMarkup(cards) {
@@ -79,17 +74,13 @@ function addCardsToGallery(markup) {
 function clearGallery() {
   refs.gallery.innerHTML = '';
 }
-async function onScroll() {
-  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  const { height: cardHeight } = refs.gallery.firstElementChild.getBoundingClientRect();
 
-  // scroll starts to execute on 1 card height and less from bottom of document
-  if (scrollTop + clientHeight < scrollHeight - cardHeight) {
-    return;
-  }
-  await loadMore();
-}
-function removeScrollListener() {
-  window.removeEventListener('scroll', onScrollThrottled);
-  isScrollListener = false;
+function onObserve(entries, observer) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      observer.unobserve(entry.target);
+      isObserving = false;
+      loadMore();
+    }
+  });
 }
